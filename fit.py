@@ -4,24 +4,31 @@ import matplotlib.pyplot as plt
 import scipy.stats as st
 
 from coldAna import *
-from coldData import V4_cold_500mV as thisCollection
+from coldData import V7_cold_ledge as thisCollection
+print "loaded data"
+print thisCollection.size
 
 subCollection = thisCollection[{"peakingTime": "2 usec", "gain": "14 mV/fC"}]
-thisWF = subCollection.waveforms[100]
+print "down-selected waveforms"
+print subCollection.size
+
+thisWF = subCollection.waveforms[subCollection.size-1]
 
 @np.vectorize
-def gauss_and_BL(x, baseline, height, width, t0, ceiling):
-    return np.min((baseline + height*st.norm.pdf(x, loc = t0, scale = width), ceiling))
+def gauss_and_BL(x, baseline, height, width, t0):
+    return baseline + height*st.norm.pdf(x, loc = t0, scale = width)
 
-guessParams = [thisWF.baseline, 23000, 2, 763, 14050]
+guessParams = [thisWF.baseline, 23000, 2, 273]
 
 fig, (ax1, ax2) = plt.subplots(2, 1, sharex = True)
 
+print "fitting..."
 bfParams = thisWF.fit_model(gauss_and_BL,
                             guessParams,
                             ax = ax1,
                             label = 'fit',
                             color = 'orange')
+print "done!"
 
 thisWF.plot(ax = ax1,
             marker = '+',

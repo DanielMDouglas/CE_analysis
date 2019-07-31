@@ -6,7 +6,9 @@ from coldAna import *
 
 dataDir = "../data/"
 
-V4_cold_500mV = load_file(dataDir + "V4-cold-500mV.dat")
+V7_cold_ledge = load_file(dataDir + "2019-07-31-09-45.dat")
+
+# V4_cold_500mV = load_file(dataDir + "V4-cold-500mV.dat")
 
 # the rest are commented out for now to save time from loading them
 # this can probably be done in a better way...

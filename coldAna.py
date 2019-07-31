@@ -2,10 +2,26 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize as opt
 
-headerKeys = ["ID", "chipType", "channel", "socket",
-              "conf", "testPulse", "baseline", "gain",
-              "peakingTime", "outputCoupling", "outputBuffer",
-              "otherConf", "globalConf", "DAC"]
+headerKeys = ["ID",              # unique string for each chip
+              "chipType",        # v4, v7, v8, etc.
+              "socket",          # int, which socket is this chip in?
+              "channel",         # int, which channel is this waveform from?
+              "conf",            # configuration bit (encoded as 2-digit hex)
+              "testPulse",       # from conf, bool, is pulser on?
+              "baseline",        # from conf, str, nominal baseline
+              "gain",            # from conf, str, nominal gain
+              "peakingTime",     # from conf, str, nominal peaking time
+              "outputCoupling",  # from conf, str, ???
+              "outputBuffer",    # from conf, str, ???
+              "otherConf",       # config bit for all other channels
+              "globalConf",      # global control bits
+              "DACconf",         # internal DAC control bits
+              "DACnum",          # internal DAC numerical setting
+              "ExtPulserMag",    # external pulser amplitude in volts
+              "ExtPulserRise",   # external pulser rise time in microseconds
+              "temp",            # temperature (77 for LN2, 300 for RT)
+              "N",               # int, number of sample in waveform
+]
 
 class waveform:
     def __init__(self, header, data):
@@ -32,8 +48,10 @@ class waveform:
         ax.scatter(self.ticks, self.samples, **kwargs)
         
     def fit_model(self, model, x0, ax = plt, **plotkwargs):
-        "fit a given function of the form f(t, c1, c2, ...) with initial guess values for c1, c2...,
-        then plot to given axes, passing other keyword args unchanged"
+        """
+        fit a given function of the form f(t, c1, c2, ...) with initial guess values for c1, c2...,
+        then plot to given axes, passing other keyword args unchanged
+        """
         def chi2(args):
             return sum((model(xi, *args) - yi)**2 for xi, yi in zip(self.ticks, self.samples))
 
@@ -90,16 +108,15 @@ class waveformCollection:
         
 
 def load_file(inFileName,
-              headerSize = 8,
-              bufferSize = 2000):
+              headerSize = 13):
     "returns a waveformCollection object from a file"
     headerStrings = np.loadtxt(inFileName,
                                usecols = range(headerSize),
                                dtype = str)
     
     # lookup tables for interpreting the configuration byte
-    testPulseValue = {0: "OFF",
-                      1: "ON"}
+    testPulseValue = {0: False,
+                      1: True}
     baselineValue = {0: "900 mV",
                      1: "200 mV"}
     gainValue = {0: "4.7 mV/fC",
@@ -112,13 +129,13 @@ def load_file(inFileName,
                         1: "3 usec"}
     outputCouplingValue = {0: "DC",
                            1: "AC"}
-    outputBufferValue = {0: "OFF",
-                         1: "ON"}
+    outputBufferValue = {0: False,
+                         1: True}
 
     headers = [{"ID": headerString[0],
                 "chipType": headerString[1],
-                "channel": int(headerString[2]),
-                "socket": int(headerString[3]),
+                "socket": int(headerString[2]),
+                "channel": int(headerString[3]),
                 "conf": headerString[4],
                 "testPulse": testPulseValue[(int(headerString[4], 16) & 128) >> 7],
                 "baseline": baselineValue[(int(headerString[4], 16) & 64) >> 6],
@@ -128,10 +145,15 @@ def load_file(inFileName,
                 "outputBuffer": outputBufferValue[int(headerString[4], 16) & 1],
                 "otherConf": headerString[5],
                 "globalConf": headerString[6],
-                "DAC": headerString[7]}
+                "DACconf": headerString[7],
+                "DACnum": headerString[8],
+                "ExtPulserMag": headerString[9],
+                "ExtPulserRise": headerString[10],
+                "temp": headerString[11],
+                "N": int(headerString[12])}
                for headerString in headerStrings]
     
     data = np.loadtxt(inFileName,
-                      usecols = range(headerSize, headerSize + bufferSize))
+                      usecols = range(headerSize, headerSize + headers[0]['N']))
 
     return waveformCollection([waveform(thisHeader, dat) for thisHeader, dat in zip(headers, data)])
