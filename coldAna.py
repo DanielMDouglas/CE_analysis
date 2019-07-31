@@ -9,21 +9,31 @@ headerKeys = ["ID", "chipType", "channel", "socket",
 
 class waveform:
     def __init__(self, header, data):
+        """
+        Initialize a waveform object
+        from a header (dict of header fields and their values)
+        and data (iterable containing ADC measurements)
+        """
         self.header = header
         
         self.samples = data
 
         self.ticks = np.arange(len(data))
 
+        # assumes that sideband starts 75% of the way through the waveform
         self.calc_baseline(int(0.75*len(data)))
         
     def calc_baseline(self, sidebandStart):
+        "Calculate baseline by a simple mean in a region outside of the main pulse"
         self.baseline = np.mean(self.samples[self.ticks > sidebandStart])
 
     def plot(self, ax = plt, **kwargs):
+        "Scatter plot the ADC samples to given axes, passing other keyword args unchanged"
         ax.scatter(self.ticks, self.samples, **kwargs)
         
     def fit_model(self, model, x0, ax = plt, **plotkwargs):
+        "fit a given function of the form f(t, c1, c2, ...) with initial guess values for c1, c2...,
+        then plot to given axes, passing other keyword args unchanged"
         def chi2(args):
             return sum((model(xi, *args) - yi)**2 for xi, yi in zip(self.ticks, self.samples))
 
@@ -36,7 +46,7 @@ class waveform:
         
 class waveformCollection:
     def __init__(self, waveformList):
-        # initialize from a list of waveform objects
+        "initialize from a list of waveform objects"
 
         self.waveforms = waveformList
         self.size = len(waveformList)
@@ -45,8 +55,10 @@ class waveformCollection:
                         for key in headerKeys}
 
     def __getitem__(self, selectionHeader):
-        # takes the header and returns a subset of waveforms
-        # whose headers match the supplied header fields
+        """ 
+        takes a dict of header key: value pairs and returns a subset
+        of waveforms whose headers match the supplied header fields
+        """
 
         subSet = []
 
@@ -58,17 +70,20 @@ class waveformCollection:
         return waveformCollection(subSet)
 
     def __iter__(self):
-        # iterating through the collection should just
-        # iterate through the individual waveforms
-
+        """
+        iterating through the collection should just
+        iterate through the individual waveforms
+        """
         for wf in self.waveforms:
             yield wf
 
     def byHeaderCol(self, key):
-        # given a key in headerKeys, iterate through all
-        # values of that key in this collection
-        # and yield (value, waveformCollection) pairs 
-        
+        """
+        given a key in headerKeys, iterate through all
+        values of that key in this collection
+        and yield (value, waveformCollection) pairs
+        """
+
         for value in self.uniques[key]:
             selectionHeader = {key: value}
             yield value, self[selectionHeader]
@@ -77,7 +92,7 @@ class waveformCollection:
 def load_file(inFileName,
               headerSize = 8,
               bufferSize = 2000):
-    # returns a waveformCollection object from a file
+    "returns a waveformCollection object from a file"
     headerStrings = np.loadtxt(inFileName,
                                usecols = range(headerSize),
                                dtype = str)
