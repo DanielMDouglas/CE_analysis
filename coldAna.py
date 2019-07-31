@@ -7,20 +7,6 @@ headerKeys = ["ID", "chipType", "channel", "socket",
               "peakingTime", "outputCoupling", "outputBuffer",
               "otherConf", "globalConf", "DAC"]
 
-class header:
-    def __init__(self, headerDict):
-        # this is basically a wrapper arround a dict
-        # that lets you specify any number of header values
-        # this might be redundant... (maybe just use dict instead?)
-        self.headerDict = headerDict
-
-    def __getitem__(self, item):
-        return self.headerDict[item]
-
-    def items(self):
-        return self.headerDict.items()
-    
-
 class waveform:
     def __init__(self, header, data):
         self.header = header
@@ -53,7 +39,8 @@ class waveformCollection:
         # initialize from a list of waveform objects
 
         self.waveforms = waveformList
-
+        self.size = len(waveformList)
+        
         self.uniques = {key: np.unique([wf.header[key] for wf in self.waveforms])
                         for key in headerKeys}
 
@@ -83,7 +70,7 @@ class waveformCollection:
         # and yield (value, waveformCollection) pairs 
         
         for value in self.uniques[key]:
-            selectionHeader = header({key: value})
+            selectionHeader = {key: value}
             yield value, self[selectionHeader]
         
 
@@ -113,20 +100,20 @@ def load_file(inFileName,
     outputBufferValue = {0: "OFF",
                          1: "ON"}
 
-    headers = [header({"ID": headerString[0],
-                       "chipType": headerString[1],
-                       "channel": int(headerString[2]),
-                       "socket": int(headerString[3]),
-                       "conf": headerString[4],
-                       "testPulse": testPulseValue[(int(headerString[4], 16) & 128) >> 7],
-                       "baseline": baselineValue[(int(headerString[4], 16) & 64) >> 6],
-                       "gain": gainValue[(int(headerString[4], 16) & 48) >> 4],
-                       "peakingTime": peakingTimeValue[(int(headerString[4], 16) & 12) >> 2],
-                       "outputCoupling": outputCouplingValue[(int(headerString[4], 16) & 2) >> 1],
-                       "outputBuffer": outputBufferValue[int(headerString[4], 16) & 1],
-                       "otherConf": headerString[5],
-                       "globalConf": headerString[6],
-                       "DAC": headerString[7]})
+    headers = [{"ID": headerString[0],
+                "chipType": headerString[1],
+                "channel": int(headerString[2]),
+                "socket": int(headerString[3]),
+                "conf": headerString[4],
+                "testPulse": testPulseValue[(int(headerString[4], 16) & 128) >> 7],
+                "baseline": baselineValue[(int(headerString[4], 16) & 64) >> 6],
+                "gain": gainValue[(int(headerString[4], 16) & 48) >> 4],
+                "peakingTime": peakingTimeValue[(int(headerString[4], 16) & 12) >> 2],
+                "outputCoupling": outputCouplingValue[(int(headerString[4], 16) & 2) >> 1],
+                "outputBuffer": outputBufferValue[int(headerString[4], 16) & 1],
+                "otherConf": headerString[5],
+                "globalConf": headerString[6],
+                "DAC": headerString[7]}
                for headerString in headerStrings]
     
     data = np.loadtxt(inFileName,

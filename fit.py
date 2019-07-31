@@ -7,7 +7,7 @@ from coldAna import *
 from coldData import V4_cold_500mV as thisCollection
 
 subCollection = thisCollection[{"peakingTime": "2 usec", "gain": "14 mV/fC"}]
-thisWF = subCollection.waveforms[0]
+thisWF = subCollection.waveforms[100]
 
 @np.vectorize
 def gauss_and_BL(x, baseline, height, width, t0, ceiling):
