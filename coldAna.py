@@ -36,17 +36,73 @@ class waveform:
 
         self.ticks = np.arange(len(data))
 
-        # assumes that sideband starts 75% of the way through the waveform
-        self.calc_baseline(int(0.75*len(data)))
+        # assumes that sideband ends 5% of the way into the waveform
+        self.calc_baseline(int(0.05*len(data)))
         
-    def calc_baseline(self, sidebandStart):
+    def calc_baseline(self, sidebandEnd):
         "Calculate baseline by a simple mean in a region outside of the main pulse"
-        self.baseline = np.mean(self.samples[self.ticks > sidebandStart])
+        self.baseline = np.mean(self.samples[self.ticks < sidebandEnd])
 
-    def plot(self, ax = plt, **kwargs):
+    def scatter(self, ax = plt, **kwargs):
         "Scatter plot the ADC samples to given axes, passing other keyword args unchanged"
         ax.scatter(self.ticks, self.samples, **kwargs)
-        
+
+    def plot(self, ax = plt, savefig = False, outDir = "./", ext = "png"):
+        "Plot the ADC samples to given axes, with ledge features highlighted"
+        pulserMag = self.header['ExtPulserMag']
+        chip = self.header['ID']
+        channel = self.header['channel']
+
+        plt.clf()
+    
+        plt.plot(self.ticks, self.samples)
+        plt.axhline(y = self.baseline, color = 'g', ls = '--')
+        if "hasLedge" in dir(self):
+            if self.hasLedge:
+                if self.leftLobe:
+                    plt.axvline(x = self.ledgeEdge[0], color = 'r', ls = '--')
+                    plt.axvline(x = self.zeroCrossing, color = 'b', ls = '--')
+                    plt.fill_between(self.ticks,
+                                     self.samples,
+                                     self.baseline,
+                                     where = ((self.ticks > self.ledgeEdge[0]) &
+                                              (self.ticks < self.zeroCrossing)),
+                                     hatch = '////',
+                                     edgecolor = '#1f77b4',
+                                     facecolor = 'w')
+                if self.rightLobe:
+                    plt.axvline(x = self.ledgeEdge[1], color = 'r', ls = '--')
+                    plt.fill_between(self.ticks,
+                                     self.samples,
+                                     self.baseline,
+                                     where = ((self.ticks > self.zeroCrossing) &
+                                              (self.ticks < self.ledgeEdge[1])),
+                                     hatch = '\\\\\\\\',
+                                     edgecolor = '#ff7f0e',
+                                     facecolor = 'w')
+    
+        plt.xlim(0, np.max(self.ticks))
+        plt.ylim(self.baseline - 1000, self.baseline + 1000)
+        plt.xlabel(r'Time [ADC ticks]')
+        plt.ylabel(r'ADC output')
+    
+        plt.text(2500, self.baseline + 750, "Ramp Voltage:")
+        plt.text(2750, self.baseline + 550, str(pulserMag) + " V")
+
+        plt.title("Chip: " + chip + ", Channel " + str(channel))
+        plt.tight_layout()
+
+        if savefig:
+            ext = "."+ext
+            outFileName = "_".join([chip,
+                                    str(channel),
+                                    str(pulserMag),
+                                    ext])            
+            plt.savefig(outDir+"/"+outFileName)
+        else:
+            plt.show()
+
+
     def fit_model(self, model, x0, ax = plt, **plotkwargs):
         """
         fit a given function of the form f(t, c1, c2, ...) with initial guess values for c1, c2...,
@@ -61,7 +117,82 @@ class waveform:
         ax.plot(self.ticks, model(self.ticks, *bfargs), **plotkwargs)
 
         return bfargs
+
+    def find_ledge(self):
+        """
+        try to find the ledge effect within the waveform
+        do this by peak finding.  Every waveform should have one positive peak
+        a waveform where the ledge effect is present will also have 
+        another positive peak and a negative peak
+        """
         
+        # first, smooth the waveform out by convolution
+        window_size = 15
+        fringe_size = window_size/2
+        filter = (1/float(window_size))*np.ones(window_size)
+        diff = np.diff(self.samples, n = 1, prepend = self.baseline)
+        smoothed = np.convolve(diff,
+                               filter)[fringe_size:-fringe_size]
+        for i in range(fringe_size):
+            smoothed[i] = 0
+            smoothed[-i-1] = 0
+
+        diffThresh = 8
+        diffThresh = 4
+
+        noise = []
+        noiseWindowSize = 30
+        for i in range(len(self.samples) - noiseWindowSize):
+            windowNoise = np.std(self.samples[i:i+noiseWindowSize])
+            noise.append(windowNoise)
+        noise = np.array(noiseWindowSize/2*[0] + noise + noiseWindowSize/2*[0])
+
+        P = (np.array([np.sum((noise < ni for ni in noise), dtype = float)])/float(len(noise)))[0,:]
+        # these are the first-pass peaks
+        noisyPeaks = self.ticks[(self.ticks > 400) &
+                                (noise > 18) &
+                                # (noise > 0.4*np.max(noise[self.ticks > 400])) &
+                                (P < 0.03) &
+                                (np.diff(noise, n = 1, prepend = 0) > 0)]
+        peaks = []
+        for nP in noisyPeaks:
+            # look around each peak within a small window
+            # add the maximum within that window to peaks
+            winSize = 150
+            win = abs(self.ticks - nP) < winSize
+            candidatePeaks = sorted(self.ticks[(noise == np.max(noise[win])) &
+                                               (smoothed >= 0) & 
+                                               (win)])
+            if candidatePeaks:
+                if not candidatePeaks[0] in peaks:
+                    peaks.append(candidatePeaks[0])
+                    
+        if len(peaks) == 1:
+            self.hasLedge = True
+            self.leftLobe = True
+            self.rightLobe = False
+            self.ledgeEdge = peaks
+
+            win = self.ticks > peaks[0]
+            isMin = ((self.samples - self.baseline)**2 == np.min((self.samples[win] - self.baseline)**2))
+            self.zeroCrossing = np.median(self.ticks[win & isMin])
+        elif len(peaks) >= 2:
+            self.hasLedge = True
+            self.leftLobe = True
+            self.rightLobe = True
+            self.ledgeEdge = [peaks[0], peaks[-1]]
+
+            win = (self.ticks > peaks[0]) & (self.ticks < peaks[-1])
+            isMin = ((self.samples - self.baseline)**2 == np.min((self.samples[win] - self.baseline)**2))
+            self.zeroCrossing = np.median(self.ticks[win & isMin])
+        else:
+            self.hasLedge = False
+            self.leftLobe = False
+            self.rightLobe = False
+            self.ledgeEdge = None
+            self.zeroCrossing = None
+
+
 class waveformCollection:
     def __init__(self, waveformList):
         "initialize from a list of waveform objects"
@@ -80,7 +211,7 @@ class waveformCollection:
 
         subSet = []
 
-        for wf in self.waveforms:
+        for wf in self:
             if all(wf.header[key] == value
                    for key, value in selectionHeader.items()):
                 subSet.append(wf)
@@ -105,55 +236,30 @@ class waveformCollection:
         for value in self.uniques[key]:
             selectionHeader = {key: value}
             yield value, self[selectionHeader]
-        
 
-def load_file(inFileName,
-              headerSize = 13):
-    "returns a waveformCollection object from a file"
-    headerStrings = np.loadtxt(inFileName,
-                               usecols = range(headerSize),
-                               dtype = str)
-    
-    # lookup tables for interpreting the configuration byte
-    testPulseValue = {0: False,
-                      1: True}
-    baselineValue = {0: "900 mV",
-                     1: "200 mV"}
-    gainValue = {0: "4.7 mV/fC",
-                 2: "7.8 mV/fC",
-                 1: "14 mV/fC",
-                 3: "25 mV/fC"}
-    peakingTimeValue = {2: "0.5 usec",
-                        0: "1 usec",
-                        3: "2 usec",
-                        1: "3 usec"}
-    outputCouplingValue = {0: "DC",
-                           1: "AC"}
-    outputBufferValue = {0: False,
-                         1: True}
+    def broadcast(self, function, iterkeys = None, dtype = np.float64, *args, **kwargs):
+        """
+        Do the function to all waveforms in the collection, with the result saved in a numpy array
+        """
+        if iterkeys:
+            shape = tuple(len(self.uniques[key])
+                          for key in iterkeys)
+            result = np.zeros(shape, dtype = dtype)
+            thiskey = iterkeys[0]
+            for i, (colVal, subCollection) in enumerate(self.byHeaderCol(thiskey)):
+                result[i] = broadcast(function,
+                                      subCollection,
+                                      iterkeys[1:],
+                                      *args,
+                                      **kwargs)
 
-    headers = [{"ID": headerString[0],
-                "chipType": headerString[1],
-                "socket": int(headerString[2]),
-                "channel": int(headerString[3]),
-                "conf": headerString[4],
-                "testPulse": testPulseValue[(int(headerString[4], 16) & 128) >> 7],
-                "baseline": baselineValue[(int(headerString[4], 16) & 64) >> 6],
-                "gain": gainValue[(int(headerString[4], 16) & 48) >> 4],
-                "peakingTime": peakingTimeValue[(int(headerString[4], 16) & 12) >> 2],
-                "outputCoupling": outputCouplingValue[(int(headerString[4], 16) & 2) >> 1],
-                "outputBuffer": outputBufferValue[int(headerString[4], 16) & 1],
-                "otherConf": headerString[5],
-                "globalConf": headerString[6],
-                "DACconf": headerString[7],
-                "DACnum": headerString[8],
-                "ExtPulserMag": headerString[9],
-                "ExtPulserRise": headerString[10],
-                "temp": headerString[11],
-                "N": int(headerString[12])}
-               for headerString in headerStrings]
-    
-    data = np.loadtxt(inFileName,
-                      usecols = range(headerSize, headerSize + headers[0]['N']))
+        else:
+            if len(self.waveforms) == 1:
+                result = function(self.waveforms[0], *args, **kwargs)
+            elif len(self.waveforms) > 1:
+                result = np.array([function(wf, *args, **kwargs)
+                                   for wf in self])
+            else:
+                raise ValueError, "No waveforms in collection!"
 
-    return waveformCollection([waveform(thisHeader, dat) for thisHeader, dat in zip(headers, data)])
+        return result

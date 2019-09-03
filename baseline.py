@@ -4,26 +4,33 @@ import matplotlib.pyplot as plt
 import scipy.stats as st
 
 from coldAna import *
-from coldData import V4_cold_500mV as thisCollection
+from coldData import V4_cold_500mV
 
-colors = {ID: i for ID, i in zip(thisCollection.uniques['ID'],
-                                 ['c', 'b', 'g', 'k', 'r'])}
+V4 = V4_cold_500mV.load()
 
-# keep track of which items have already been added to the legend
-inLegend = set()
+colors = ['r', 'g', 'b', 'k']
+for channel, coll in V4.byHeaderCol('channel'):
+    # for i, (chip, subColl) in cll.byHeaderCol('ID'):
+    print len(coll.waveforms)
 
-for config, perConfCollection in thisCollection.byHeaderCol('conf'):
-    for chip, perChipCollection in perConfCollection.byHeaderCol('ID'):
+# colors = {ID: i for ID, i in zip(thisCollection.uniques['ID'],
+#                                  ['c', 'b', 'g', 'k', 'r'])}
 
-        bls = [wf.baseline for wf in perChipCollection]
+# # keep track of which items have already been added to the legend
+# inLegend = set()
 
-        plt.scatter(config,
-                    np.std(bls),
-                    color = colors[chip],
-                    label = chip if not chip in inLegend else "")
-        inLegend.add(chip)
+# for config, perConfCollection in thisCollection.byHeaderCol('conf'):
+#     for chip, perChipCollection in perConfCollection.byHeaderCol('ID'):
 
-plt.xlabel(r'Configuration Byte')
-plt.ylabel(r'Baseline Standard Deviation [ADC Counts]')
-plt.legend()
-plt.show()
+#         bls = [wf.baseline for wf in perChipCollection]
+
+#         plt.scatter(config,
+#                     np.std(bls),
+#                     color = colors[chip],
+#                     label = chip if not chip in inLegend else "")
+#         inLegend.add(chip)
+
+# plt.xlabel(r'Configuration Byte')
+# plt.ylabel(r'Baseline Standard Deviation [ADC Counts]')
+# plt.legend()
+# plt.show()
