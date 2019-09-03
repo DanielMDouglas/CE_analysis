@@ -119,9 +119,9 @@ Additionally, the `waveform` class has some utility methods, such as
  * plot: plots the waveform vs. time, highlighting the ledge (if `find_ledge` has been run and this waveform has a ledge feature)
  * calc_baseline: given a sideband region (a region of the waveform that is assumed to contain no response), find the baseline by taking an average of the samples.
  * find_ledge: search the waveform for features indicative of a ledge.  This method sets the `ledgeEdge` attribute, which containes the beginning and end of the found ledge.  It also sets a number of boolean flags:
- ⋅⋅* hasLedge: Does this waveform seem to have a ledge feature?
- ⋅⋅* leftLobe: Is the left (above the baseline) lobe contained in the sample series?
- ⋅⋅* rightLobe: Is the right (below the baseline) lobe contained in the sample series?
+   * hasLedge: Does this waveform seem to have a ledge feature?
+   * leftLobe: Is the left (above the baseline) lobe contained in the sample series?
+   * rightLobe: Is the right (below the baseline) lobe contained in the sample series?
 
 ### The `waveformCollection` Class
 
