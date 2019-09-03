@@ -123,7 +123,7 @@ Additionally, the `waveform` class has some utility methods, such as
  --* leftLobe: Is the left (above the baseline) lobe contained in the sample series?
  --* rightLobe: Is the right (below the baseline) lobe contained in the sample series?
 
-### the `waveformCollection` Class
+### The `waveformCollection` Class
 
 This class is a simple container for `waveform` objects, which acts just like a list in most ways, with some special additions.  Important attributes of this class are `waveforms`, the list of actual `waveform` objects, `size`, the length of that list, and `uniques`, a dictionary of header fields and the unique values of those fields which are represented in the collection.
 
@@ -160,3 +160,7 @@ def get_average(thisWaveform):
 
 averages = allWaveforms.broadcast(get_average)
 ```
+
+## Contact/Contribute!
+
+If you have any questions, comments, or would like to contribute, your help is greatly appreciated!  Please feel free to send me an email at dougl215@msu.edu or talk to me in person, since this software is probably only useful to a very small group of people :)
