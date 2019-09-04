@@ -52,8 +52,11 @@ Just read across the table left to right to figure out the bits
 For example: typical settings in a TPC and with external test pulse:
 
 Test pulser = ON,
+
 Baserline = 900 mV,
+
 Gain = 14 mV/fC,
+
 Peaking = 2 usec,
 
 Gives bits 1001 1101 which is hex: 9D
@@ -66,6 +69,7 @@ Gives bits 1001 1101 which is hex: 9D
 |               | 1 = AC | 1 = 10x leakage | 1 = enabled  | 1 = STB1   | 1 = Bandgap     | 1 = 100 pA |
 
 Usually we keep these all set to zero
+
 To monitor temperature: 0000 0100 = hex: 04
 
 Leakage 100 pA = 0000 0001 = hex: 01
