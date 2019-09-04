@@ -67,9 +67,13 @@ Gives bits 1001 1101 which is hex: 9D
 
 Usually we keep these all set to zero
 To monitor temperature: 0000 0100 = hex: 04
+
 Leakage 100 pA = 0000 0001 = hex: 01
+
 Leakage 500 pA = 0000 0000 = hex: 00
+
 Leakage 1000 pA = 0001 0001 = hex: 11
+
 Leakage 5000 pA = 0001 0000 = hex: 10
 
 #### Binary to Hex Conversion
@@ -112,7 +116,7 @@ This program defines the `waveform` and `waveformCollection` classes.
 
 ### The `waveform` Class
 
-This class contains the data from a single line of a data file as described above.  This is the output of a single channel, using a single configuration setting, etc.  The important attributes of this class are `header`, which is a ditionary containing the values of the header fields described above, and `samples`, which is a series of ADC values.  Also contained in this class are `ticks`, which is a series which serves as the t-coordinate (in ADC ticks) of the `samples`.  `ticks` is always just `[0, 1, 2, ..., Nsamples - 1]`.
+This class contains the data from a single line of a data file as described above.  This is the output of a single channel, using a single configuration setting, etc.  The important attributes of this class are `header`, which is a dictionary containing the values of the header fields described above, and `samples`, which is a series of ADC values.  Also contained in this class are `ticks`, which is a series which serves as the t-coordinate (in ADC ticks) of the `samples`.  `ticks` is always just `[0, 1, 2, ..., Nsamples - 1]`.
 
 Additionally, the `waveform` class has some utility methods, such as
 
