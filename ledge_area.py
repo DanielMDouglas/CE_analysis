@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import scipy.stats as st
 
 from coldAna import *
-from coldData import V7_cold_ledge
+from coldData import V7_run1
 from utils import *
 
 mpl.rc('font', family = 'FreeSerif', size = 16, weight = 'bold')
@@ -13,7 +13,7 @@ plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
 
 model_V_space = np.linspace(0.0, 1.6, 1000)
 
-thisCollection = V7_cold_ledge[8].load()
+thisCollection = V7_run1[8].load()
 # thisCollection = thisCollection[{"ID": "P211", "channel": 0}]
 plotWaveforms = False
 plotRegressions = False

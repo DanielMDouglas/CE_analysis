@@ -83,14 +83,21 @@ class dataFile:
 
 dataDir = "../data/"
 
-V7_cold_ledge = [dataFile(dataDir + "V7/2019-07-31-batch0.dat"),
-                 dataFile(dataDir + "V7/2019-08-27-batch1.dat"),
-                 dataFile(dataDir + "V7/2019-08-27-batch2.dat"),
-                 dataFile(dataDir + "V7/2019-08-27-batch3.dat"),
-                 dataFile(dataDir + "V7/2019-08-28-batch4.dat"),
-                 dataFile(dataDir + "V7/2019-08-28-batch5.dat"),
-                 dataFile(dataDir + "V7/2019-08-28-batch6.dat"),
-                 dataFile(dataDir + "V7/2019-08-28-batch7.dat"),
-                 dataFile(dataDir + "V7/2019-08-28-batch8.dat")]
+V7_run1 = [dataFile(dataDir + "run1/2019-07-31-batch0.dat"),
+           dataFile(dataDir + "run1/2019-08-27-batch1.dat"),
+           dataFile(dataDir + "run1/2019-08-27-batch2.dat"),
+           dataFile(dataDir + "run1/2019-08-27-batch3.dat"),
+           dataFile(dataDir + "run1/2019-08-28-batch4.dat"),
+           dataFile(dataDir + "run1/2019-08-28-batch5.dat"),
+           dataFile(dataDir + "run1/2019-08-28-batch6.dat"),
+           dataFile(dataDir + "run1/2019-08-28-batch7.dat"),
+           dataFile(dataDir + "run1/2019-08-28-batch8.dat")]
 
-# V4_cold_500mV = dataFile(dataDir + "V4-cold-500mV.dat")
+V7_run2 = [dataFile(dataDir + "run2/batch"
+                    + str(batchNo) + "/batch"
+                    + str(batchNo) + "_"
+                    + str(baseLine) + "mV_"
+                    + str(leakage) + "pA.dat")
+           for batchNo in range(1, 4)
+           for baseLine in [200, 900]
+           for leakage in [100, 500, 1000, 5000]]
