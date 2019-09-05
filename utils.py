@@ -54,3 +54,15 @@ def quadratic_zero_coupling(A, B, C, D, E):
     F = -D*root**2 - E*root
     return (A, B, C), (D, E, F)
 
+def hex_to_bin(n, digits = 2):
+    """convert a hex string to a list of its digits in binary representation"""
+    result = []
+    if digits:
+        nBinDigits = digits*4
+    else:
+        nBinDigits = len(n)*4
+    base10 = int(n, 16)
+    for place in range(nBinDigits)[::-1]:
+        result.append((base10 >> place) & 1)
+
+    return result

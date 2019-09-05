@@ -15,6 +15,13 @@ headerKeys = ["ID",              # unique string for each chip
               "outputBuffer",    # from conf, str, ???
               "otherConf",       # config bit for all other channels
               "globalConf",      # global control bits
+              "SDC",             # from global control, str, ???
+              "SLKH",            # leakage current multiplier, int
+              "Ch16Filter",      # from global control, str, ???
+              "Channel0",        # from global control, str, ??? 
+              "STB1",            # from global control, str, ???
+              "Leakage",         # leakage current, before multiplier, int
+              "leakageCurrent",  # total leakage current, int
               "DACconf",         # internal DAC control bits
               "DACnum",          # internal DAC numerical setting
               "ExtPulserMag",    # external pulser amplitude in volts

@@ -1,4 +1,5 @@
 from coldAna import *
+from utils import *
 
 # lookup tables for interpreting the configuration byte
 lookup = {"testPulseValue":      {0: False,
@@ -16,7 +17,20 @@ lookup = {"testPulseValue":      {0: False,
           "outputCouplingValue": {0: "DC",
                                   1: "AC"},
           "outputBufferValue":   {0: False,
-                                  1: True}}
+                                  1: True},
+          "SDCValue":            {0: "DC",
+                                  1: "AC"},
+          "SLKHValue":           {0: 1,
+                                  1: 10},
+          "Ch16FilterValue":     {0: False,
+                                  1: True},
+          "Channel0Value":       {0: "Normal",
+                                  1: "STB1"},
+          "STB1Value":           {0: "Temperature",
+                                  1: "Bandgap"},
+          "LeakageValue":        {0: 500,
+                                  1: 100},
+}
 
 class dataFile:
     def __init__(self, fileName, headerSize = 13):
@@ -34,14 +48,21 @@ class dataFile:
                     "socket": int(headerString[2]),
                     "channel": int(headerString[3]),
                     "conf": headerString[4],
-                    "testPulse": lookup["testPulseValue"][(int(headerString[4], 16) & 128) >> 7],
-                    "baseline": lookup["baselineValue"][(int(headerString[4], 16) & 64) >> 6],
+                    "testPulse": lookup["testPulseValue"][hex_to_bin(headerString[4])[0]],
+                    "baseline": lookup["baselineValue"][hex_to_bin(headerString[4])[1]],
                     "gain": lookup["gainValue"][(int(headerString[4], 16) & 48) >> 4],
                     "peakingTime": lookup["peakingTimeValue"][(int(headerString[4], 16) & 12) >> 2],
-                    "outputCoupling": lookup["outputCouplingValue"][(int(headerString[4], 16) & 2) >> 1],
-                    "outputBuffer": lookup["outputBufferValue"][int(headerString[4], 16) & 1],
+                    "outputCoupling": lookup["outputCouplingValue"][hex_to_bin(headerString[4])[6]],
+                    "outputBuffer": lookup["outputBufferValue"][hex_to_bin(headerString[4])[7]],
                     "otherConf": headerString[5],
                     "globalConf": headerString[6],
+                    "SDC": lookup["SDCValue"][hex_to_bin(headerString[6])[2]],
+                    "SLKH": lookup["SLKHValue"][hex_to_bin(headerString[6])[3]],
+                    "Ch16Filter": lookup["Ch16FilterValue"][hex_to_bin(headerString[6])[3]],
+                    "Channel0": lookup["Channel0Value"][hex_to_bin(headerString[6])[5]],
+                    "STB1": lookup["STB1Value"][hex_to_bin(headerString[6])[6]],
+                    "Leakage": lookup["LeakageValue"][hex_to_bin(headerString[6])[7]],
+                    "leakageCurrent": lookup["SLKHValue"][hex_to_bin(headerString[6])[3]] * lookup["LeakageValue"][hex_to_bin(headerString[6])[7]],
                     "DACconf": headerString[7],
                     "DACnum": headerString[8],
                     "ExtPulserMag": float(headerString[9]),
@@ -72,4 +93,4 @@ V7_cold_ledge = [dataFile(dataDir + "V7/2019-07-31-batch0.dat"),
                  dataFile(dataDir + "V7/2019-08-28-batch7.dat"),
                  dataFile(dataDir + "V7/2019-08-28-batch8.dat")]
 
-V4_cold_500mV = dataFile(dataDir + "V4-cold-500mV.dat")
+# V4_cold_500mV = dataFile(dataDir + "V4-cold-500mV.dat")
