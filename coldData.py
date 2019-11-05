@@ -81,7 +81,7 @@ class dataFile:
 # you will probably have to adjust the dataDir
 # path to your specific directory
 
-dataDir = "../data/"
+dataDir = "../"
 
 V7_run1 = [dataFile(dataDir + "run1/2019-07-31-batch0.dat"),
            dataFile(dataDir + "run1/2019-08-27-batch1.dat"),
@@ -93,11 +93,20 @@ V7_run1 = [dataFile(dataDir + "run1/2019-07-31-batch0.dat"),
            dataFile(dataDir + "run1/2019-08-28-batch7.dat"),
            dataFile(dataDir + "run1/2019-08-28-batch8.dat")]
 
-V7_run2 = [dataFile(dataDir + "run2/batch"
-                    + str(batchNo) + "/batch"
-                    + str(batchNo) + "_"
-                    + str(baseLine) + "mV_"
-                    + str(leakage) + "pA.dat")
-           for batchNo in range(1, 4)
-           for baseLine in [200, 900]
-           for leakage in [100, 500, 1000, 5000]]
+V7_run2 = {baseLine: {leakage: [dataFile(dataDir + "run2/batch"
+                                         + str(batchNo) + "/batch"
+                                         + str(batchNo) + "_"
+                                         + str(baseLine) + "mV_"
+                                         + str(leakage) + "pA.dat")
+                                for batchNo in range(1, 7)]
+                      for leakage in [100, 500, 1000, 5000]}
+           for baseLine in [200, 900]}
+
+V7_run4 = {baseline: {leakage: [dataFile(dataDir + "run4/batch"
+                                         + str(batchNo) + "/batch"
+                                         + str(batchNo) + "_"
+                                         + str(baseLine) + "mV_"
+                                         + str(leakage) + "pA.dat")
+                                for batchNo in range(1, 5)]
+                      for leakage in [100, 500, 1000, 5000]}
+           for baseLine in [200, 900]}
